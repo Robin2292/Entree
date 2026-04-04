@@ -57,10 +57,9 @@ export const sessionsScript = `
     const entry = sessions.get(id);
     if (!entry) return;
 
-    const wsUrl = (id === SELF.id
-      ? 'ws://' + location.host
-      : 'ws://localhost:' + entry.info.port)
-      + '?token=' + encodeURIComponent(TOKEN);
+    const wsUrl = id === SELF.id
+      ? 'ws://' + location.host + '?token=' + encodeURIComponent(TOKEN)
+      : 'ws://localhost:' + entry.info.port + '?cross=1';
 
     const ws = new WebSocket(wsUrl);
     entry.ws = ws;

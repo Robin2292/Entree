@@ -1,5 +1,5 @@
 import { createServer } from "net";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 
 export async function findPort(base: number): Promise<number> {
   for (let p = base; p < base + 100; p++) {
@@ -15,11 +15,16 @@ export async function findPort(base: number): Promise<number> {
 }
 
 export function openBrowser(url: string) {
-  const cmd =
-    process.platform === "darwin"
-      ? `open "${url}"`
-      : process.platform === "win32"
-        ? `start "${url}"`
-        : `xdg-open "${url}"`;
-  exec(cmd);
+  if (process.platform === "darwin") {
+    execFile("open", [url]);
+  } else if (process.platform === "win32") {
+    execFile("cmd", ["/c", "start", "", url]);
+  } else {
+    execFile("xdg-open", [url]);
+  }
+}
+
+export function maskToken(token: string): string {
+  if (token.length <= 8) return "***";
+  return token.slice(0, 4) + "..." + token.slice(-4);
 }

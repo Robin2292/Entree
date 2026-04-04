@@ -15,6 +15,14 @@ export const utilsScript = `
     return esc(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
+  function sanitizeUrl(url, allowDataImage) {
+    if (!url) return '';
+    var trimmed = url.trim().toLowerCase();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('#') || trimmed.startsWith('/')) return url;
+    if (allowDataImage && trimmed.startsWith('data:image/')) return url;
+    return '';
+  }
+
   function showToast(msg, type) {
     type = type || 'info';
     const el = document.createElement('div');
@@ -118,11 +126,15 @@ export const utilsScript = `
     s = s.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
     s = s.replace(/\\*(.+?)\\*/g, '<em>$1</em>');
 
-    // Images ![alt](url)
-    s = s.replace(/!\\[([^\\]]*)\\]\\(([^)]+)\\)/g, '<img src="$2" alt="$1" />');
+    // Images ![alt](url) — sanitize URL protocol
+    s = s.replace(/!\\[([^\\]]*)\\]\\(([^)]+)\\)/g, function(_m, alt, url) {
+      return '<img src="' + escAttr(sanitizeUrl(url, true)) + '" alt="' + escAttr(alt) + '" />';
+    });
 
-    // Links [text](url)
-    s = s.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Links [text](url) — sanitize URL protocol
+    s = s.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, function(_m, text, url) {
+      return '<a href="' + escAttr(sanitizeUrl(url, false)) + '" target="_blank" rel="noopener">' + text + '</a>';
+    });
 
     // Task lists (- [x] or - [ ])
     s = s.replace(/(^|\\n)((?:[-*] \\[[ xX]\\] .+(?:\\n|$))+)/g, function(_m, pre, block) {

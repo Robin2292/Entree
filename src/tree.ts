@@ -199,17 +199,9 @@ export class TreeManager {
 
     const found = exact || caseInsensitive || partial;
     if (!found) {
-      throw new Error(
-        `Node "${idOrLabel}" not found. Available: ${this.listLabels().join(", ")}`
-      );
+      throw new Error(`Node "${idOrLabel}" not found`);
     }
     return found;
-  }
-
-  private listLabels(): string[] {
-    return Object.values(this.tree.nodes)
-      .filter((n) => n.parentId !== null) // skip root
-      .map((n) => `"${n.label}"`);
   }
 
   // --- Breadcrumb ---
@@ -268,6 +260,9 @@ export class TreeManager {
     if (!tree || typeof tree !== "object") throw new Error("Invalid tree data");
     if (!tree.rootId || !tree.nodes || typeof tree.nodes !== "object")
       throw new Error("Missing required fields: rootId, nodes");
+    const nodeCount = Object.keys(tree.nodes).length;
+    if (nodeCount > TreeManager.MAX_NODES)
+      throw new Error(`Tree exceeds maximum of ${TreeManager.MAX_NODES} nodes (has ${nodeCount})`);
     if (!tree.nodes[tree.rootId])
       throw new Error("Root node not found in nodes");
 
@@ -281,6 +276,26 @@ export class TreeManager {
         throw new Error(`Node "${id}" references missing parent "${node.parentId}"`);
       if (!Array.isArray(node.children))
         throw new Error(`Node "${id}" has invalid children`);
+    }
+
+    // Cycle detection + reachability check (BFS from root)
+    const visited = new Set<string>();
+    const queue = [tree.rootId];
+    visited.add(tree.rootId);
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      const node = tree.nodes[id];
+      for (const childId of node.children) {
+        if (!tree.nodes[childId])
+          throw new Error(`Node "${id}" references missing child "${childId}"`);
+        if (visited.has(childId))
+          throw new Error(`Cycle detected: node "${childId}" is reachable via multiple paths`);
+        visited.add(childId);
+        queue.push(childId);
+      }
+    }
+    if (visited.size !== Object.keys(tree.nodes).length) {
+      throw new Error("Unreachable nodes detected");
     }
 
     // Accept — fill in defaults for optional fields
@@ -299,6 +314,7 @@ export class TreeManager {
 
   // ─── Input validation ───
 
+  static readonly MAX_NODES = 5000;
   static readonly MAX_LABEL_LENGTH = 200;
   static readonly MAX_CONTENT_LENGTH = 50_000;
   static readonly MAX_CHILDREN = 50;
@@ -457,12 +473,19 @@ export class TreeManager {
   }
 
   getSubtree(nodeId: string): TreeNode[] {
-    const node = this.tree.nodes[nodeId];
-    if (!node) return [];
-
-    const result: TreeNode[] = [node];
-    for (const childId of node.children) {
-      result.push(...this.getSubtree(childId));
+    const result: TreeNode[] = [];
+    const visited = new Set<string>();
+    const stack = [nodeId];
+    while (stack.length > 0) {
+      const id = stack.pop()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const node = this.tree.nodes[id];
+      if (!node) continue;
+      result.push(node);
+      for (const childId of node.children) {
+        stack.push(childId);
+      }
     }
     return result;
   }

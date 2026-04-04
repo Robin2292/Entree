@@ -3,7 +3,7 @@ import { TreeManager } from "./tree.js";
 import { startWebServer } from "./web/index.js";
 import { registerSession, unregisterSession, getTreesDir } from "./registry.js";
 import { join } from "path";
-import { findPort, openBrowser } from "./utils.js";
+import { findPort, openBrowser, maskToken } from "./utils.js";
 
 async function main() {
   const sessionId = randomUUID();
@@ -35,7 +35,7 @@ async function main() {
   openBrowser(url);
 
   process.stderr.write(
-    `\n🌳 Entree is running at ${url}\n` +
+    `\n🌳 Entree is running at http://localhost:${port}?token=${maskToken(sessionToken)}\n` +
       `   Press Ctrl+C to stop.\n\n`
   );
 }

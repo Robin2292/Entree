@@ -5,6 +5,7 @@ import { URL } from "url";
 import type { TreeManager } from "../tree.js";
 import { getSessions, type Session } from "../registry.js";
 import { getHTML } from "./html.js";
+import { maskToken } from "../utils.js";
 
 export function startWebServer(
   treeManager: TreeManager,
@@ -55,7 +56,7 @@ export function startWebServer(
     res.json(getSessions());
   });
 
-  app.use(express.json({ limit: "5mb" }));
+  app.use(express.json({ limit: "2mb" }));
 
   app.post("/api/tree/import", (req, res) => {
     try {
@@ -91,7 +92,12 @@ export function startWebServer(
     // Verify token from query string
     try {
       const url = new URL(req.url || "", `http://localhost:${port}`);
-      if (url.searchParams.get("token") !== token) {
+      const providedToken = url.searchParams.get("token");
+      const isCrossSession = url.searchParams.get("cross") === "1";
+      const remoteAddr = req.socket.remoteAddress;
+      const isLoopback = remoteAddr === "127.0.0.1" || remoteAddr === "::1" || remoteAddr === "::ffff:127.0.0.1";
+
+      if (providedToken !== token && !(isCrossSession && isLoopback)) {
         ws.close(4001, "Unauthorized");
         return;
       }
@@ -113,7 +119,7 @@ export function startWebServer(
 
   httpServer.listen(port, "127.0.0.1", () => {
     process.stderr.write(
-      `🌳 Entree UI: http://localhost:${port}?token=${token}\n`
+      `🌳 Entree UI: http://localhost:${port}?token=${maskToken(token)}\n`
     );
   });
 }

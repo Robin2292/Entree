@@ -253,6 +253,22 @@ describe("WebSocket", () => {
     expect(code).toBe(4001);
   });
 
+  it("accepts cross-session connection from loopback", async () => {
+    const { WebSocket } = await import("ws");
+    const ws = new WebSocket(`ws://127.0.0.1:${TEST_PORT}?cross=1`);
+
+    const message = await new Promise<any>((resolve, reject) => {
+      ws.on("message", (data) => {
+        resolve(JSON.parse(data.toString()));
+        ws.close();
+      });
+      ws.on("error", reject);
+      setTimeout(() => { ws.close(); reject(new Error("WS timeout")); }, 3000);
+    });
+
+    expect(message.type).toBe("tree");
+  });
+
   it("pushes updates when tree changes", async () => {
     const { WebSocket } = await import("ws");
     const ws = new WebSocket(`ws://127.0.0.1:${TEST_PORT}?token=${TEST_TOKEN}`);

@@ -210,6 +210,17 @@ describe("TreeManager", () => {
     it("throws when no node matches", () => {
       expect(() => mgr.resolveNode("totally nonexistent")).toThrow(/not found/i);
     });
+
+    it("does not leak label names in error message", () => {
+      const rootId = mgr.getTree().rootId;
+      mgr.addNode(rootId, "Secret Label", "content");
+      try {
+        mgr.resolveNode("nonexistent");
+      } catch (e: any) {
+        expect(e.message).not.toContain("Secret Label");
+        expect(e.message).toContain("not found");
+      }
+    });
   });
 
   // ─── Update ───
@@ -472,6 +483,55 @@ describe("TreeManager", () => {
       const tree = JSON.parse(JSON.stringify(mgr.getTree()));
       mgr.importTree(tree);
       expect(mgr.getCursorId()).toBe(mgr.getTree().rootId);
+    });
+
+    it("rejects tree with cycles", () => {
+      const cycleTree = {
+        rootId: "r",
+        nodes: {
+          r: { id: "r", label: "Root", content: "", parentId: null, children: ["a"], depth: 0, createdAt: "" },
+          a: { id: "a", label: "A", content: "", parentId: "r", children: ["b"], depth: 1, createdAt: "" },
+          b: { id: "b", label: "B", content: "", parentId: "a", children: ["a"], depth: 2, createdAt: "" },
+        },
+      };
+      expect(() => mgr.importTree(cycleTree)).toThrow(/cycle/i);
+    });
+
+    it("rejects tree with orphan nodes", () => {
+      const orphanTree = {
+        rootId: "r",
+        nodes: {
+          r: { id: "r", label: "Root", content: "", parentId: null, children: [], depth: 0, createdAt: "" },
+          orphan: { id: "orphan", label: "Orphan", content: "", parentId: "r", children: [], depth: 1, createdAt: "" },
+        },
+      };
+      expect(() => mgr.importTree(orphanTree)).toThrow(/unreachable/i);
+    });
+
+    it("rejects tree with missing child reference", () => {
+      const missingChildTree = {
+        rootId: "r",
+        nodes: {
+          r: { id: "r", label: "Root", content: "", parentId: null, children: ["missing"], depth: 0, createdAt: "" },
+        },
+      };
+      expect(() => mgr.importTree(missingChildTree)).toThrow(/missing child/i);
+    });
+
+    it("rejects import exceeding MAX_NODES", () => {
+      const bigTree: any = {
+        rootId: "r",
+        nodes: {
+          r: { id: "r", label: "Root", content: "", parentId: null, children: [] as string[], depth: 0, createdAt: "" },
+        },
+      };
+      for (let i = 0; i < TreeManager.MAX_NODES; i++) {
+        const id = `n${i}`;
+        bigTree.nodes[id] = { id, label: `N${i}`, content: "", parentId: "r", children: [], depth: 1, createdAt: "" };
+        bigTree.nodes.r.children.push(id);
+      }
+      expect(Object.keys(bigTree.nodes).length).toBe(TreeManager.MAX_NODES + 1);
+      expect(() => mgr.importTree(bigTree)).toThrow(/maximum/i);
     });
   });
 

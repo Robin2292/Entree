@@ -64,6 +64,18 @@ describe("registry", () => {
       expect(sessions.some((s) => s.id === session.id)).toBe(true);
     });
 
+    it("does not persist token to disk", () => {
+      const session = makeSession({ token: "secret-token-value" });
+      registerSession(session);
+
+      const raw = readFileSync(SESSIONS_FILE, "utf-8");
+      expect(raw).not.toContain("secret-token-value");
+
+      const sessions = getSessions();
+      const found = sessions.find((s) => s.id === session.id);
+      expect(found?.token).toBeUndefined();
+    });
+
     it("replaces session with same ID on re-register", () => {
       const session = makeSession();
       registerSession(session);

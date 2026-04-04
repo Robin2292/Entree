@@ -3,7 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { join } from "path";
-import { findPort, openBrowser } from "./utils.js";
+import { findPort, openBrowser, maskToken } from "./utils.js";
 import { TreeManager } from "./tree.js";
 import { startWebServer } from "./web/index.js";
 import {
@@ -249,7 +249,7 @@ Use for detailed analysis on a direction. Moves cursor to this node.`,
   startWebServer(treeManager, webPort, session);
 
   const url = `http://localhost:${webPort}?token=${sessionToken}`;
-  process.stderr.write(`🌳 Entree UI: ${url}\n`);
+  process.stderr.write(`🌳 Entree UI: http://localhost:${webPort}?token=${maskToken(sessionToken)}\n`);
 
   if (autoOpen) {
     openBrowser(url);

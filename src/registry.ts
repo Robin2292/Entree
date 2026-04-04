@@ -69,7 +69,9 @@ export function cleanStaleSessions(): Session[] {
 
 export function registerSession(session: Session) {
   const sessions = cleanStaleSessions().filter((s) => s.id !== session.id);
-  sessions.push(session);
+  // Strip token — never persist secrets to disk
+  const { token: _token, ...safe } = session;
+  sessions.push(safe as Session);
   writeSessions(sessions);
 }
 
