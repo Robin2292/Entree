@@ -137,8 +137,14 @@ Use for detailed analysis on a direction. Moves cursor to this node.`,
         if (!target) throw new Error("No active cursor node");
       }
 
+      // Append new content to existing content instead of replacing
+      const existingContent = target.content;
+      const mergedContent = existingContent
+        ? existingContent + "\n\n" + content
+        : content;
+
       const updated = treeManager.updateNode(target.id, {
-        content,
+        content: mergedContent,
         ...(label ? { label } : {}),
       });
       const ctx = treeManager.getContext(updated.id);
@@ -223,21 +229,26 @@ Use for detailed analysis on a direction. Moves cursor to this node.`,
   );
 
   server.tool(
-    "tree_reset",
-    "Reset the tree for a new exploration session. Cursor resets to root.",
+    "tree_new_topic",
+    `Start a new analysis topic. Creates a topic node under the root and moves cursor there.
+Use at the beginning of each new block of analytical work. Previous topics are preserved.
+If the user continues or revisits an existing topic, do NOT create a new topic — use tree_branch or tree_add_insight on the existing node instead (reference by label).`,
     {
-      title: z.string().optional().describe("Title for the new exploration"),
+      title: z.string().describe("Short title for this analysis topic (2-8 words)"),
     },
     async ({ title }) => {
-      const tree = treeManager.resetTree(title);
+      const node = treeManager.newTopic(title);
+      const ctx = treeManager.getContext(node.id);
+
       return {
         content: [
           {
             type: "text",
             text: JSON.stringify({
-              message: "Tree reset",
-              rootId: tree.rootId,
-              title: tree.title,
+              message: "Topic started",
+              breadcrumb: ctx.breadcrumb,
+              children: ctx.children,
+              node: { id: node.id, label: node.label },
             }),
           },
         ],

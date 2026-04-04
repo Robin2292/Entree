@@ -48,8 +48,9 @@ Add instructions to your project's AI config file (`CLAUDE.md`, `.cursorrules`, 
 ```markdown
 ## Entree
 
-Call `tree_reset` at conversation start. Use only during analytical work (debugging, architecture, research), not simple Q&A.
+Call `tree_new_topic` at the start of each analytical task. Use only during analytical work (debugging, architecture, research), not simple Q&A. Previous topics are preserved.
 
+- `tree_new_topic`: start a new analysis topic. Creates a topic node under root and moves cursor there.
 - `tree_branch`: only at **decision forks** — multiple hypotheses, competing approaches, or classification dimensions. Never for execution steps (writing code, running tests).
 - `tree_add_insight`: append findings/conclusions to existing nodes.
 - Structure = logical containment (topic → dimensions → items → analysis). Plan the tree shape before creating nodes.
@@ -83,7 +84,7 @@ AI Client ←→ MCP (stdio) ←→ Entree Server ←→ Web UI (WebSocket)
 
 | Tool | Purpose |
 |------|---------|
-| `tree_reset` | Start a new exploration session |
+| `tree_new_topic` | Start a new analysis topic (preserves history) |
 | `tree_branch` | Add multiple exploration directions from a node |
 | `tree_add_insight` | Add analysis/findings to a node |
 | `tree_delete` | Remove a node and its subtree |

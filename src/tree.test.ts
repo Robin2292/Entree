@@ -410,6 +410,75 @@ describe("TreeManager", () => {
     });
   });
 
+  // ─── New Topic ───
+
+  describe("newTopic", () => {
+    it("creates a child under root with correct depth", () => {
+      const rootId = mgr.getTree().rootId;
+      const topic = mgr.newTopic("Bug Analysis");
+      expect(topic.parentId).toBe(rootId);
+      expect(topic.depth).toBe(1);
+      expect(topic.label).toBe("Bug Analysis");
+      expect(topic.content).toBe("");
+    });
+
+    it("moves cursor to the new topic node", () => {
+      const topic = mgr.newTopic("Research");
+      expect(mgr.getCursorId()).toBe(topic.id);
+    });
+
+    it("works on a brand new empty tree", () => {
+      const freshPath = tmpPath();
+      const fresh = new TreeManager(freshPath);
+      const topic = fresh.newTopic("First Topic");
+      expect(topic.parentId).toBe(fresh.getTree().rootId);
+      expect(Object.keys(fresh.getTree().nodes)).toHaveLength(2); // root + topic
+    });
+
+    it("creates sibling topics under root", () => {
+      const rootId = mgr.getTree().rootId;
+      const t1 = mgr.newTopic("Topic A");
+      const t2 = mgr.newTopic("Topic B");
+      expect(t1.parentId).toBe(rootId);
+      expect(t2.parentId).toBe(rootId);
+      expect(t1.depth).toBe(t2.depth);
+      const root = mgr.getNode(rootId)!;
+      expect(root.children).toContain(t1.id);
+      expect(root.children).toContain(t2.id);
+    });
+
+    it("always attaches to root regardless of cursor position", () => {
+      const rootId = mgr.getTree().rootId;
+      // Move cursor deep into a subtree
+      const child = mgr.addNode(rootId, "Deep", "");
+      mgr.addNode(child.id, "Deeper", "");
+      // Now newTopic should still go to root
+      const topic = mgr.newTopic("New Topic");
+      expect(topic.parentId).toBe(rootId);
+    });
+
+    it("preserves existing tree data", () => {
+      const rootId = mgr.getTree().rootId;
+      const existing = mgr.addNode(rootId, "Existing", "important data");
+      const nodeCountBefore = Object.keys(mgr.getTree().nodes).length;
+
+      mgr.newTopic("New Topic");
+
+      expect(mgr.getNode(existing.id)).toBeDefined();
+      expect(mgr.getNode(existing.id)!.content).toBe("important data");
+      expect(Object.keys(mgr.getTree().nodes)).toHaveLength(nodeCountBefore + 1);
+    });
+
+    it("is undoable", () => {
+      const nodeCountBefore = Object.keys(mgr.getTree().nodes).length;
+      mgr.newTopic("Will Undo");
+      expect(Object.keys(mgr.getTree().nodes)).toHaveLength(nodeCountBefore + 1);
+
+      mgr.undo();
+      expect(Object.keys(mgr.getTree().nodes)).toHaveLength(nodeCountBefore);
+    });
+  });
+
   // ─── Import ───
 
   describe("importTree", () => {

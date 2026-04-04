@@ -248,6 +248,10 @@ export class TreeManager {
     return this.tree;
   }
 
+  newTopic(title: string): TreeNode {
+    return this.addNode(this.tree.rootId, title, "");
+  }
+
   setTitle(title: string) {
     this.pushSnapshot();
     this.tree.title = title;
