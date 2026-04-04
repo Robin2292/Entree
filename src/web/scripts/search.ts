@@ -71,7 +71,11 @@ export const searchScript = `
     document.getElementById('search-info').textContent = (searchIdx + 1) + '/' + searchMatches.length;
   }
 
-  document.getElementById('search-input').addEventListener('input', doSearch);
+  let searchTimer;
+  document.getElementById('search-input').addEventListener('input', function() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(doSearch, 200);
+  });
   document.getElementById('search-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); searchNav(e.shiftKey ? -1 : 1); }
     if (e.key === 'Escape') { e.preventDefault(); toggleSearch(); }

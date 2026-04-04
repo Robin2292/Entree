@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { URL } from "url";
 import type { TreeManager } from "../tree.js";
 import { getSessions, type Session } from "../registry.js";
+import { randomBytes } from "crypto";
 import { getHTML } from "./html.js";
 import { maskToken } from "../utils.js";
 
@@ -39,10 +40,13 @@ export function startWebServer(
       res.status(401).send("Unauthorized — token required");
       return;
     }
+    const nonce = randomBytes(16).toString("base64");
     res.type("html")
       .set("Content-Security-Policy",
-        "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; img-src 'self' data:")
-      .send(getHTML(session));
+        `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; img-src 'self' data:; frame-ancestors 'none'`)
+      .set("X-Frame-Options", "DENY")
+      .set("X-Content-Type-Options", "nosniff")
+      .send(getHTML(session, nonce));
   });
 
   // All API routes require token
