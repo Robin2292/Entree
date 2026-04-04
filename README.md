@@ -1,8 +1,10 @@
 # Entree
 
-An MCP server that visualizes Claude Code's exploration process as an interactive tree.
+An MCP server that visualizes AI exploration as an interactive tree in your browser.
 
-When Claude Code analyzes problems, it often explores multiple directions — debugging hypotheses, architecture options, code paths. Entree makes this process visible: every branch and insight is rendered as a real-time, interactive tree in your browser.
+When AI agents analyze problems, they often explore multiple directions — debugging hypotheses, architecture options, code paths. Entree makes this process visible: every branch and insight is rendered as a real-time, interactive tree.
+
+Works with any MCP-compatible client: Claude Code, Cursor, Windsurf, Cline, and more.
 
 ## Quick Start
 
@@ -14,7 +16,9 @@ npm install -g entree-mcp
 
 ### Configure as MCP Server
 
-Add to your Claude Code MCP settings (`.mcp.json` or Settings > MCP Servers):
+Add to your MCP client settings:
+
+**Claude Code** (`.mcp.json`):
 
 ```json
 {
@@ -27,18 +31,25 @@ Add to your Claude Code MCP settings (`.mcp.json` or Settings > MCP Servers):
 }
 ```
 
-Then instruct Claude when to use it via `CLAUDE.md`:
+**Cursor / Windsurf / Other MCP clients** — use the same command config in your client's MCP server settings.
+
+### Guide the AI
+
+Add instructions to your project's AI config file (`CLAUDE.md`, `.cursorrules`, etc.):
 
 ```markdown
-## Exploration Tree
+## Entree
 
-Call `tree_reset` at conversation start.
-Use `tree_branch` to record exploration directions, `tree_add_insight` to record findings.
+Call `tree_reset` at conversation start. Use only during analytical work (debugging, architecture, research), not simple Q&A.
+
+- `tree_branch`: only at **decision forks** — multiple hypotheses, competing approaches, or classification dimensions. Never for execution steps (writing code, running tests).
+- `tree_add_insight`: append findings/conclusions to existing nodes.
+- Structure = logical containment (topic → dimensions → items → analysis), depth 2-4. Plan the tree shape before creating nodes.
 ```
 
 ### Standalone Viewer
 
-Run without Claude Code to browse existing trees:
+Run without an AI client to browse and edit trees:
 
 ```bash
 npx entree-mcp
@@ -47,12 +58,12 @@ npx entree-mcp
 ## How It Works
 
 ```
-Claude Code ←→ MCP (stdio) ←→ Entree Server ←→ Web UI (WebSocket)
-                                     ↕
-                              ~/.entree/trees/*.json
+AI Client ←→ MCP (stdio) ←→ Entree Server ←→ Web UI (WebSocket)
+                                    ↕
+                             ~/.entree/trees/*.json
 ```
 
-1. Claude calls MCP tools (`tree_branch`, `tree_add_insight`, etc.) as it explores
+1. The AI calls MCP tools (`tree_branch`, `tree_add_insight`, etc.) as it explores
 2. Entree persists the tree to disk and pushes updates via WebSocket
 3. The browser UI renders the tree in real-time with pan, zoom, search, and export
 
@@ -73,13 +84,16 @@ A **cursor** tracks the last active node, so tools default to the current positi
 
 ## Web UI Features
 
-- **Real-time sync** — tree updates instantly as Claude explores
+- **Real-time sync** — tree updates instantly as the AI explores
 - **Pan & zoom** — drag to pan, scroll to zoom, `Cmd+1` to fit
 - **Search** — `Cmd+F` for full-text search across labels and content
-- **Multi-session** — tabs for multiple concurrent Claude sessions
-- **Export** — download as Markdown outline or Mermaid mindmap
-- **Detail panel** — click any node to view its full content with Markdown rendering
+- **Multi-session** — tabs for multiple concurrent sessions
+- **Undo / Redo** — `Cmd+Z` / `Cmd+Shift+Z`, up to 50 steps
+- **Import / Export** — JSON format, full tree backup and restore
+- **Detail panel** — click any node to view full content with Markdown rendering (tables, code blocks, task lists, strikethrough)
+- **Resizable panel** — drag the left edge to adjust detail panel width
 - **Keyboard shortcuts** — `Cmd+0` reset view, `Cmd+[/]` switch tabs, `Esc` close panel
+- **Token auth** — per-session token protects the web UI
 
 ## Environment Variables
 
@@ -103,6 +117,7 @@ Trees are saved with debounced atomic writes (tmp + rename). Stale sessions are 
 ```bash
 npm run dev     # watch mode (rebuilds on change)
 npm run build   # production build
+npm test        # run test suite
 npm run mcp     # run MCP server directly
 npm start       # run standalone CLI viewer
 ```
