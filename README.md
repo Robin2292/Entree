@@ -9,8 +9,7 @@ When Claude Code analyzes problems, it often explores multiple directions — de
 ### Install
 
 ```bash
-npm install
-npm run build
+npm install -g entree-mcp
 ```
 
 ### Configure as MCP Server
@@ -21,8 +20,8 @@ Add to your Claude Code MCP settings (`.mcp.json` or Settings > MCP Servers):
 {
   "mcpServers": {
     "entree": {
-      "command": "node",
-      "args": ["/path/to/claude-exploration-tree/dist/server.js"]
+      "command": "npx",
+      "args": ["-y", "entree-mcp"]
     }
   }
 }
@@ -42,9 +41,7 @@ Use `tree_branch` to record exploration directions, `tree_add_insight` to record
 Run without Claude Code to browse existing trees:
 
 ```bash
-npx entree
-# or
-npm start
+npx entree-mcp
 ```
 
 ## How It Works

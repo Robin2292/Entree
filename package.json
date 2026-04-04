@@ -1,5 +1,5 @@
 {
-  "name": "entree",
+  "name": "entree-mcp",
   "version": "0.1.0",
   "description": "Entree — an MCP plugin that visualizes conversation exploration as an interactive tree",
   "type": "module",
