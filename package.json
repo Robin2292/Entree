@@ -21,6 +21,19 @@
     "visualization"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Robin2292/Entree.git"
+  },
+  "homepage": "https://github.com/Robin2292/Entree#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist/*.js",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "express": "^5.1.0",
