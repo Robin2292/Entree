@@ -8,7 +8,15 @@ Works with any MCP-compatible client: Claude Code, Cursor, Windsurf, Cline, and 
 
 ## Quick Start
 
-### Install
+### One-click: Let your AI agent install it
+
+Paste this to your AI agent (Claude Code, Cursor, etc.):
+
+```
+Help me install and configure entree-mcp. Follow the instructions at https://raw.githubusercontent.com/Robin2292/Entree/main/AGENTS.md
+```
+
+### Manual Install
 
 ```bash
 npm install -g entree-mcp
