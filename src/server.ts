@@ -2,11 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { randomUUID } from "crypto";
-import { exec } from "child_process";
-import { createServer as createNetServer } from "net";
 import { join } from "path";
+import { findPort, openBrowser } from "./utils.js";
 import { TreeManager } from "./tree.js";
-import { startWebServer } from "./web.js";
+import { startWebServer } from "./web/index.js";
 import {
   registerSession,
   unregisterSession,
@@ -19,21 +18,9 @@ function detectSessionName(): string {
   return `Session ${process.pid}`;
 }
 
-async function findPort(base: number): Promise<number> {
-  for (let p = base; p < base + 100; p++) {
-    const ok = await new Promise<boolean>((resolve) => {
-      const s = createNetServer();
-      s.once("error", () => resolve(false));
-      s.once("listening", () => s.close(() => resolve(true)));
-      s.listen(p);
-    });
-    if (ok) return p;
-  }
-  throw new Error(`No available port in range ${base}-${base + 99}`);
-}
-
 async function main() {
   const sessionId = randomUUID();
+  const sessionToken = randomUUID();
   const sessionName = detectSessionName();
   const basePort = parseInt(process.env.TREE_WEB_PORT || "3200");
   const webPort = await findPort(basePort);
@@ -50,6 +37,7 @@ async function main() {
     pid: process.pid,
     cwd: process.cwd(),
     startedAt: new Date().toISOString(),
+    token: sessionToken,
   };
   registerSession(session);
 
@@ -60,7 +48,7 @@ async function main() {
 
   // --- MCP Server ---
   const server = new McpServer({
-    name: "exploration-tree",
+    name: "entree",
     version: "0.1.0",
   });
 
@@ -260,17 +248,11 @@ Use for detailed analysis on a direction. Moves cursor to this node.`,
   // --- Start Web UI ---
   startWebServer(treeManager, webPort, session);
 
-  const url = `http://localhost:${webPort}`;
-  process.stderr.write(`🌳 Web UI: ${url}\n`);
+  const url = `http://localhost:${webPort}?token=${sessionToken}`;
+  process.stderr.write(`🌳 Entree UI: ${url}\n`);
 
   if (autoOpen) {
-    const openCmd =
-      process.platform === "darwin"
-        ? `open "${url}"`
-        : process.platform === "win32"
-          ? `start "${url}"`
-          : `xdg-open "${url}"`;
-    exec(openCmd);
+    openBrowser(url);
   }
 
   const transport = new StdioServerTransport();
