@@ -1,18 +1,25 @@
 {
-  "name": "claude-exploration-tree",
+  "name": "entree",
   "version": "0.1.0",
-  "description": "A Claude Code MCP plugin that visualizes conversation exploration as an interactive tree",
+  "description": "Entree — an MCP plugin that visualizes conversation exploration as an interactive tree",
   "type": "module",
   "bin": {
-    "claude-exploration-tree": "./dist/cli.js"
+    "entree": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "start": "node dist/cli.js",
-    "mcp": "node dist/server.js"
+    "mcp": "node dist/server.js",
+    "test": "vitest run"
   },
-  "keywords": ["claude-code", "mcp", "exploration-tree", "visualization"],
+  "keywords": [
+    "claude-code",
+    "mcp",
+    "entree",
+    "exploration-tree",
+    "visualization"
+  ],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
@@ -23,6 +30,7 @@
     "@types/express": "^5.0.2",
     "@types/ws": "^8.18.1",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.2"
   }
 }
