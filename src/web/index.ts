@@ -6,7 +6,7 @@ import type { TreeManager } from "../tree.js";
 import { getSessions, type Session } from "../registry.js";
 import { randomBytes } from "crypto";
 import { getHTML } from "./html.js";
-import { maskToken } from "../utils.js";
+import { maskToken, WEB_HOST } from "../utils.js";
 
 export function startWebServer(
   treeManager: TreeManager,
@@ -121,7 +121,7 @@ export function startWebServer(
     ws.on("close", unsub);
   });
 
-  httpServer.listen(port, "127.0.0.1", () => {
+  httpServer.listen(port, WEB_HOST, () => {
     process.stderr.write(
       `🌳 Entree UI: http://localhost:${port}?token=${maskToken(token)}\n`
     );
