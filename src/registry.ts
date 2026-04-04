@@ -9,9 +9,10 @@ export interface Session {
   pid: number;
   cwd: string;
   startedAt: string;
+  token?: string;
 }
 
-const BASE_DIR = join(homedir(), ".exploration-tree");
+const BASE_DIR = join(homedir(), ".entree");
 const SESSIONS_FILE = join(BASE_DIR, "sessions.json");
 const TREES_DIR = join(BASE_DIR, "trees");
 
