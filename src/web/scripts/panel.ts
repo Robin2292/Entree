@@ -64,6 +64,21 @@ export const panelScript = `
     }
   }
 
+  async function copyNodeContent() {
+    if (!selectedNodeId) return;
+    const tree = getActiveTree();
+    if (!tree) return;
+    const node = tree.nodes[selectedNodeId];
+    if (!node) return;
+    var text = node.label + (node.content ? '\\n\\n' + node.content : '');
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard', 'success');
+    } catch {
+      showToast('Copy failed', 'error');
+    }
+  }
+
   // =====================
   //  Panel resize
   // =====================

@@ -60,3 +60,7 @@ A browser window opens automatically at `http://localhost:3200` showing the tree
 - Web UI runs on localhost only (port 3200, auto-increments if taken)
 - Each session is token-authenticated
 - Set `TREE_NO_OPEN=1` to disable auto-opening the browser
+
+## Important: LLM Attention Limitation
+
+Due to how LLMs manage attention over long conversations, AI agents may sometimes stop using MCP tools mid-session. If this happens, the user should explicitly prompt you (e.g., "use entree to record your analysis"). This is normal behavior and not a bug — a brief reminder is enough to re-engage the tools.

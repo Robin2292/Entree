@@ -78,6 +78,7 @@ export function getHTML(session: Session, nonce: string): string {
   <div class="meta" id="panel-meta"></div>
   <div class="body" id="panel-content"></div>
   <div class="panel-actions">
+    <button class="action-btn" id="btn-copy">Copy</button>
     <button class="action-btn danger" id="btn-delete">Delete</button>
   </div>
 </div>

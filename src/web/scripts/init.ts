@@ -18,6 +18,7 @@ export const initScript = `
 
   // Detail panel buttons
   document.getElementById('btn-close-panel').addEventListener('click', closePanel);
+  document.getElementById('btn-copy').addEventListener('click', copyNodeContent);
   document.getElementById('btn-delete').addEventListener('click', deleteSelected);
 
   // Boot

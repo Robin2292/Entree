@@ -55,6 +55,8 @@ Call `tree_reset` at conversation start. Use only during analytical work (debugg
 - Structure = logical containment (topic → dimensions → items → analysis). Plan the tree shape before creating nodes.
 ```
 
+> **Note:** Due to LLM attention limitations, AI agents may sometimes forget to use MCP tools during long conversations. If the tree stops updating, explicitly prompt the agent (e.g., "use entree to record your exploration").
+
 ### Standalone Viewer
 
 Run without an AI client to browse and edit trees:
