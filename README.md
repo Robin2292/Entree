@@ -52,7 +52,7 @@ Call `tree_reset` at conversation start. Use only during analytical work (debugg
 
 - `tree_branch`: only at **decision forks** — multiple hypotheses, competing approaches, or classification dimensions. Never for execution steps (writing code, running tests).
 - `tree_add_insight`: append findings/conclusions to existing nodes.
-- Structure = logical containment (topic → dimensions → items → analysis), depth 2-4. Plan the tree shape before creating nodes.
+- Structure = logical containment (topic → dimensions → items → analysis). Plan the tree shape before creating nodes.
 ```
 
 ### Standalone Viewer
