@@ -54,6 +54,8 @@ export const utilsScript = `
 
   function renderMd(raw) {
     if (!raw) return '<span style="color:var(--text-dim)">(No detailed content yet)</span>';
+    // Normalize literal \\n/\\t to real whitespace (LLMs inconsistently send these)
+    raw = raw.replace(/\\\\n/g, '\\n').replace(/\\\\t/g, '\\t');
     var s = esc(raw);
 
     // Code blocks (must be first — protect contents from further transforms)
