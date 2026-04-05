@@ -18,7 +18,33 @@ export function startWebServer(
   const httpServer = createServer(app);
   const wss = new WebSocketServer({ server: httpServer });
 
+  // --- CORS for cross-session localhost requests ---
+
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+      try {
+        const url = new URL(origin);
+        if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+          res.set("Access-Control-Allow-Origin", origin);
+          res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+          res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+        }
+      } catch {}
+    }
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+  });
+
   // --- Auth middleware ---
+
+  function isLoopback(req: express.Request): boolean {
+    const ip = req.socket.remoteAddress;
+    return ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+  }
 
   function verifyToken(req: express.Request, res: express.Response, next: express.NextFunction) {
     // Check Authorization header first, then query param
@@ -26,6 +52,9 @@ export function startWebServer(
     const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
     const queryToken = req.query.token as string | undefined;
     if (headerToken === token || queryToken === token) {
+      next();
+    } else if (isLoopback(req) && req.headers.origin) {
+      // Cross-session request from localhost — allow (same as WebSocket cross=1)
       next();
     } else {
       res.status(401).json({ error: "Unauthorized" });

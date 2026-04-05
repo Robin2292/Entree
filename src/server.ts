@@ -67,19 +67,26 @@ Response includes breadcrumb + existing children so you always know where you ar
         ),
       branches: z
         .array(
-          z.object({
-            label: z
-              .string()
-              .describe("Short label for this direction (2-8 words)"),
-            content: z
-              .string()
-              .describe("Brief description of this exploration direction"),
-          })
+          z.union([
+            z.object({
+              label: z
+                .string()
+                .describe("Short label for this direction (2-8 words)"),
+              content: z
+                .string()
+                .describe("Brief description of this exploration direction"),
+            }),
+            z.string().describe("Short label (content will be empty)"),
+          ])
         )
         .min(1)
-        .describe("The branches/directions to add"),
+        .describe("The branches/directions to add. Each item can be a {label, content} object or a plain string (used as label)."),
     },
-    async ({ parent, branches }) => {
+    async ({ parent, branches: rawBranches }) => {
+      // Normalize: plain strings become {label, content: ""}
+      const branches = rawBranches.map((b) =>
+        typeof b === "string" ? { label: b, content: "" } : b
+      );
       // Resolve parent: explicit → cursor → root
       let parentNode;
       if (parent) {

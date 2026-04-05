@@ -26,7 +26,18 @@ export function stateScript(selfJson: string): string {
   function authFetch(url, opts) {
     opts = opts || {};
     opts.headers = Object.assign({ 'Authorization': 'Bearer ' + TOKEN }, opts.headers || {});
-    return fetch(url, opts);
+    return fetch(url, opts).catch(err => {
+      // Provide clearer error for cross-origin / network failures
+      try {
+        const u = new URL(url, location.origin);
+        if (u.origin !== location.origin) {
+          throw new Error('Cannot reach session at ' + u.origin + ' (cross-origin request blocked or session is down)');
+        }
+      } catch (parseErr) {
+        if (parseErr.message.includes('Cannot reach session')) throw parseErr;
+      }
+      throw err;
+    });
   }
 
   // DOM refs
