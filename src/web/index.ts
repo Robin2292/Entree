@@ -22,18 +22,25 @@ export function startWebServer(
 
   app.use((req, res, next) => {
     const origin = req.headers.origin;
+    let allowed = false;
     if (origin) {
       try {
         const url = new URL(origin);
         if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
-          res.set("Access-Control-Allow-Origin", origin);
-          res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-          res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+          allowed = true;
         }
       } catch {}
     }
+    if (allowed) {
+      res.set("Access-Control-Allow-Origin", origin!);
+      res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.set("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    }
     if (req.method === "OPTIONS") {
-      res.sendStatus(204);
+      // Explicit 204 with headers — avoid relying on sendStatus which may
+      // not flush custom headers in all Express 5 scenarios.
+      res.writeHead(204);
+      res.end();
       return;
     }
     next();
@@ -72,7 +79,7 @@ export function startWebServer(
     const nonce = randomBytes(16).toString("base64");
     res.type("html")
       .set("Content-Security-Policy",
-        `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; connect-src ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; img-src 'self' data:; frame-ancestors 'none'`)
+        `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; connect-src ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; img-src 'self' data:; frame-ancestors 'none'`)
       .set("X-Frame-Options", "DENY")
       .set("X-Content-Type-Options", "nosniff")
       .send(getHTML(session, nonce));
@@ -80,6 +87,7 @@ export function startWebServer(
 
   // All API routes require token
   app.use("/api", verifyToken);
+  app.use(express.json({ limit: "2mb" }));
 
   app.get("/api/tree", (_req, res) => {
     res.json(treeManager.getTree());
@@ -88,8 +96,6 @@ export function startWebServer(
   app.get("/api/sessions", (_req, res) => {
     res.json(getSessions());
   });
-
-  app.use(express.json({ limit: "2mb" }));
 
   app.post("/api/tree/import", (req, res) => {
     try {

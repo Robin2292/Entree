@@ -249,7 +249,15 @@ export class TreeManager {
   }
 
   newTopic(title: string): TreeNode {
-    return this.addNode(this.tree.rootId, title, "");
+    const isFirstTopic = this.tree.nodes[this.tree.rootId].children.length === 0;
+    const node = this.addNode(this.tree.rootId, title, "");
+    // Auto-name the tree after the first topic so browser tabs show
+    // a meaningful title instead of the default "Exploration".
+    if (isFirstTopic) {
+      this.tree.title = title;
+      this.notify();
+    }
+    return node;
   }
 
   setTitle(title: string) {

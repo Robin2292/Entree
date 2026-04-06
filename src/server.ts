@@ -74,7 +74,12 @@ Response includes breadcrumb + existing children so you always know where you ar
                 .describe("Short label for this direction (2-8 words)"),
               content: z
                 .string()
+                .optional()
                 .describe("Brief description of this exploration direction"),
+              description: z
+                .string()
+                .optional()
+                .describe("Alias for 'content' — either name accepted"),
             }),
             z.string().describe("Short label (content will be empty)"),
           ])
@@ -83,9 +88,11 @@ Response includes breadcrumb + existing children so you always know where you ar
         .describe("The branches/directions to add. Each item can be a {label, content} object or a plain string (used as label)."),
     },
     async ({ parent, branches: rawBranches }) => {
-      // Normalize: plain strings become {label, content: ""}
+      // Normalize: plain strings become {label, content: ""}, resolve aliases
       const branches = rawBranches.map((b) =>
-        typeof b === "string" ? { label: b, content: "" } : b
+        typeof b === "string"
+          ? { label: b, content: "" }
+          : { label: b.label, content: b.content ?? b.description ?? "" }
       );
       // Resolve parent: explicit → cursor → root
       let parentNode;
@@ -129,13 +136,22 @@ Use for detailed analysis on a direction. Moves cursor to this node.`,
         .describe(
           "Node ID or label (fuzzy matched). Omit to add to cursor."
         ),
-      content: z.string().describe("The insight or information to add"),
+      insight: z
+        .string()
+        .optional()
+        .describe("The insight or information to add (preferred parameter name)"),
+      content: z
+        .string()
+        .optional()
+        .describe("Alias for 'insight' — either name accepted"),
       label: z
         .string()
         .optional()
         .describe("Update the node label if needed"),
     },
-    async ({ node: nodeRef, content, label }) => {
+    async ({ node: nodeRef, insight, content, label }) => {
+      const text = insight ?? content;
+      if (!text) throw new Error("Either 'insight' or 'content' is required");
       let target;
       if (nodeRef) {
         target = treeManager.resolveNode(nodeRef);
@@ -147,8 +163,8 @@ Use for detailed analysis on a direction. Moves cursor to this node.`,
       // Append new content to existing content instead of replacing
       const existingContent = target.content;
       const mergedContent = existingContent
-        ? existingContent + "\n\n" + content
-        : content;
+        ? existingContent + "\n\n" + text
+        : text;
 
       const updated = treeManager.updateNode(target.id, {
         content: mergedContent,
